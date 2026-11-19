@@ -20,8 +20,8 @@
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
-/database/*.sqlite
-/database/*.sqlite-*
+# /database/*.sqlite
+# /database/*.sqlite-*
 /storage/*.key
 /storage/app/private/
 /storage/app/public/

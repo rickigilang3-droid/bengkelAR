@@ -16,15 +16,37 @@ foreach ($storageDirs as $dir) {
     }
 }
 
-// Set storage path for Laravel
+// Set storage and cache paths for Laravel
 $_ENV['LARAVEL_STORAGE_PATH'] = '/tmp/storage';
 $_SERVER['LARAVEL_STORAGE_PATH'] = '/tmp/storage';
+putenv('LARAVEL_STORAGE_PATH=/tmp/storage');
 
-// If using SQLite and DB file in /tmp does not exist, copy database.sqlite
-$sqliteOriginal = __DIR__ . '/../database/database.sqlite';
-$sqliteTmp = '/tmp/database.sqlite';
-if (file_exists($sqliteOriginal) && !file_exists($sqliteTmp)) {
-    @copy($sqliteOriginal, $sqliteTmp);
+$_ENV['APP_STORAGE'] = '/tmp/storage';
+$_SERVER['APP_STORAGE'] = '/tmp/storage';
+putenv('APP_STORAGE=/tmp/storage');
+
+$_ENV['VIEW_COMPILED_PATH'] = '/tmp/storage/framework/views';
+$_SERVER['VIEW_COMPILED_PATH'] = '/tmp/storage/framework/views';
+putenv('VIEW_COMPILED_PATH=/tmp/storage/framework/views');
+
+// Handle SQLite database in /tmp if using SQLite
+$dbConnection = getenv('DB_CONNECTION') ?: ($_ENV['DB_CONNECTION'] ?? 'sqlite');
+if ($dbConnection === 'sqlite') {
+    $sqliteTmp = '/tmp/database.sqlite';
+    $sqliteOriginal = __DIR__ . '/../database/database.sqlite';
+
+    if (!file_exists($sqliteTmp)) {
+        if (file_exists($sqliteOriginal)) {
+            @copy($sqliteOriginal, $sqliteTmp);
+        } else {
+            @touch($sqliteTmp);
+        }
+        @chmod($sqliteTmp, 0666);
+    }
+
+    $_ENV['DB_DATABASE'] = $sqliteTmp;
+    $_SERVER['DB_DATABASE'] = $sqliteTmp;
+    putenv("DB_DATABASE={$sqliteTmp}");
 }
 
 // Forward to public/index.php
